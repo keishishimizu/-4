@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字化け体験＆しくみラボ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            pop: '#ff5757',
+                            yellow: '#ffde59',
+                            green: '#10b981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Hiragino Sans', 'BIZ UDPGothic', 'Meiryo', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- encoding-japanese library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
+    <style>
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .animate-pop {
+            animation: pulse-subtle 3s infinite ease-in-out;
+        }
+        .step-arrow::after {
+            content: '➔';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-brand-500 text-white rounded-xl shadow-md">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 tracking-tight flex items-center gap-2">
+                        文字化けラボ <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-700">体験＆学習</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Mode Selector Tabs -->
+            <nav class="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                <button onclick="switchTab('step1')" id="btn-tab-step1" class="px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 bg-white text-brand-600 shadow-sm">
+                    <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                    <span>1. まず体験してみよう！</span>
+                </button>
+                <button onclick="switchTab('step2')" id="btn-tab-step2" class="px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
+                    <i data-lucide="cpu" class="w-4 h-4"></i>
+                    <span>2. なぜ化けるの？しくみを見る</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- ========================================== -->
+        <!-- STEP 1: KANTAN EXPERIMENTAL MODE (SIMPLE UI) -->
+        <!-- ========================================== -->
+        <div id="view-step1" class="space-y-6">
+
+            <!-- Friendly Welcome Banner -->
+            <div class="bg-gradient-to-r from-brand-500 to-sky-500 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 space-y-2">
+                    <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-wide">初心者かんたんモード</span>
+                    <h2 class="text-xl sm:text-2xl font-black">文字を入れて、化けさせてみよう！</h2>
+                    <p class="text-xs sm:text-sm text-brand-100 max-w-xl">
+                        好きな日本語を入力して「保存のルール」と「読み込みのルール」を変えるだけで、いろいろな怪しい文字化けが作れます。
+                    </p>
+                </div>
+                <div class="absolute right-4 -bottom-6 text-white/10 pointer-events-none font-black text-9xl select-none">
+                    !?
+                </div>
+            </div>
+
+            <!-- Presets Section -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i>
+                    <span>ワンタップでおもしろ文字化けをためす：</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button onclick="applySimplePreset('utf8-sjis')" class="p-2.5 rounded-xl bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 text-left transition-all group">
+                        <div class="text-[10px] font-bold text-slate-400 group-hover:text-brand-600">定番の記号化け</div>
+                        <div class="text-xs font-bold text-slate-700 font-mono mt-0.5 truncate">ããã«ã¡ã¯</div>
+                    </button>
+                    <button onclick="applySimplePreset('sjis-latin')" class="p-2.5 rounded-xl bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 text-left transition-all group">
+                        <div class="text-[10px] font-bold text-slate-400 group-hover:text-brand-600">半角カタカナ化け</div>
+                        <div class="text-xs font-bold text-slate-700 font-mono mt-0.5 truncate">ï½¶ï¾ï¾ï¾</div>
+                    </button>
+                    <button onclick="applySimplePreset('jis-utf8')" class="p-2.5 rounded-xl bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 text-left transition-all group">
+                        <div class="text-[10px] font-bold text-slate-400 group-hover:text-brand-600">昔のメール風化け</div>
+                        <div class="text-xs font-bold text-slate-700 font-mono mt-0.5 truncate">$B$3$s$K$A$O</div>
+                    </button>
+                    <button onclick="applySimplePreset('sjis-utf8')" class="p-2.5 rounded-xl bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 text-left transition-all group">
+                        <div class="text-[10px] font-bold text-slate-400 group-hover:text-brand-600">謎の漢字化け</div>
+                        <div class="text-xs font-bold text-slate-700 font-mono mt-0.5 truncate"> </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Playground Area -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Left: Inputs -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                    <div>
+                        <label for="simple-input" class="block text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+                            <span>1. 正しい文字を入力してね</span>
+                            <span class="text-slate-400 font-normal text-[11px]" id="simple-char-count">6 文字</span>
+                        </label>
+                        <input type="text" id="simple-input" value="こんにちは！" oninput="updateSimpleSimulation()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all" placeholder="ここに文字を入れる">
+                    </div>
+
+                    <!-- Simplified Rule Selectors -->
+                    <div class="space-y-3 pt-2">
+                        <div class="bg-sky-50/70 border border-sky-100 p-3 rounded-xl space-y-1">
+                            <label for="simple-src-rule" class="block text-xs font-bold text-brand-700 flex items-center gap-1">
+                                <i data-lucide="file-output" class="w-3.5 h-3.5"></i> A. 作った人が保存したルール
+                            </label>
+                            <select id="simple-src-rule" onchange="updateSimpleSimulation()" class="w-full bg-white border border-sky-200 rounded-lg p-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="UTF-8" selected>UTF-8（今のスマホやWebの標準）</option>
+                                <option value="SJIS">Shift_JIS（昔のWindowsパソコン）</option>
+                                <option value="EUC-JP">EUC-JP（昔のLinux・サーバ）</option>
+                                <option value="JIS">ISO-2022-JP（ガラケー・昔のメール）</option>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-center -my-1">
+                            <button onclick="swapSimpleRules()" class="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-600 transition-all">
+                                <i data-lucide="arrow-down-up" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <div class="bg-rose-50/70 border border-rose-100 p-3 rounded-xl space-y-1">
+                            <label for="simple-dst-rule" class="block text-xs font-bold text-rose-700 flex items-center gap-1">
+                                <i data-lucide="file-input" class="w-3.5 h-3.5"></i> B. 受け取った人が読み込んだルール
+                            </label>
+                            <select id="simple-dst-rule" onchange="updateSimpleSimulation()" class="w-full bg-white border border-rose-200 rounded-lg p-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                                <option value="SJIS" selected>Shift_JIS（勘違いして読んだ）</option>
+                                <option value="UTF-8">UTF-8</option>
+                                <option value="ISO-8859-1">ISO-8859-1（欧米の英字ルール）</option>
+                                <option value="EUC-JP">EUC-JP</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Output Result Box -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-brand-pop flex items-center gap-1.5">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i> 2. 文字化けした結果はこちら！
+                            </span>
+                            <span id="match-status-pill" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-600">
+                                ルール不一致（文字化け中）
+                            </span>
+                        </div>
+
+                        <!-- Output Display Box -->
+                        <div id="simple-output" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 min-h-[120px] text-brand-yellow font-mono text-xl sm:text-2xl break-all flex items-center justify-center text-center shadow-inner select-all">
+                            <!-- Output by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="copyOutputText()" class="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                <i data-lucide="copy" class="w-4 h-4"></i> 結果をコピー
+                            </button>
+                            <button onclick="copyChallengeLink()" class="w-full py-2.5 px-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                <i data-lucide="share-2" class="w-4 h-4"></i> 問題を出題・シェア
+                            </button>
+                        </div>
+                        <button onclick="switchTab('step2')" class="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                            <span>「なぜこうなるの？」しくみを解剖してみる</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- STEP 2: MECHANISM VISUALIZER (LEARNING MODE) -->
+        <!-- ========================================== -->
+        <div id="view-step2" class="space-y-6 hidden">
+
+            <!-- Concept Intro Card -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-3">
+                <div class="flex items-center gap-2 text-brand-600 font-bold text-sm">
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500"></i>
+                    <span>文字化けの根本的な原因</span>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-900">
+                    コンピュータは文字を「数字（バイト列）」で覚えている！
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    コンピュータの中には「あ」や「漢字」という形そのものは入っていません。<br>
+                    文字はすべて<strong class="text-brand-600">「番号（バイト）」</strong>に変えて記録されています。<br>
+                    <strong>「暗号表（文字コード）」が食い違うと、全く別の文字に解釈されてしまう</strong>のが文字化けの正体です。
+                </p>
+            </div>
+
+            <!-- Interactive Step-by-step Visualizer -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <h4 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                            <i data-lucide="microscope" class="w-5 h-5 text-brand-500"></i>
+                            文字化け解剖ビジュアライザー
+                        </h4>
+                        <p class="text-xs text-slate-500">選択した1文字が、コンピュータの中でどう変身するか順番に追ってみよう！</p>
+                    </div>
+                    <!-- Single Character Selector -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600">検証する文字:</span>
+                        <input type="text" id="mech-single-char" value="あ" maxlength="1" oninput="updateMechanismView()" class="w-12 h-10 text-center font-extrabold text-lg bg-slate-100 border border-slate-300 rounded-xl text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <!-- 3-Step Visual Flow Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    <!-- STEP A: Character to Binary Bytes -->
+                    <div class="bg-sky-50/60 border border-sky-200 rounded-2xl p-4 space-y-3 relative">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-brand-500 text-white rounded-lg text-[10px] font-black uppercase">STEP 1</span>
+                            <span class="text-[11px] font-bold text-brand-700">文字 ➔ 数字(バイト)</span>
+                        </div>
+                        <div class="text-center py-2 space-y-1">
+                            <div class="text-3xl font-black text-slate-800" id="mech-char-display">あ</div>
+                            <div class="text-[11px] font-mono text-slate-500" id="mech-unicode-display">Unicode: U+3042</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-sky-100 space-y-1">
+                            <div class="text-[10px] font-bold text-slate-400">UTF-8でのデータ（16進数）:</div>
+                            <div class="text-sm font-mono font-bold text-brand-600 break-all" id="mech-bytes-hex">E3 81 82</div>
+                            <div class="text-[10px] text-slate-500 font-mono" id="mech-bytes-count">（3バイトのデータ）</div>
+                        </div>
+                    </div>
+
+                    <!-- STEP B: Wrong Decoder Rule Applied -->
+                    <div class="bg-amber-50/60 border border-amber-200 rounded-2xl p-4 space-y-3 relative">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase">STEP 2</span>
+                            <span class="text-[11px] font-bold text-amber-800">誤ったルールで読み解く</span>
+                        </div>
+                        <div class="space-y-2 py-1">
+                            <div class="text-xs font-bold text-slate-700">読み込みルール:</div>
+                            <select id="mech-rule-select" onchange="updateMechanismView()" class="w-full bg-white border border-amber-300 rounded-xl p-2 text-xs font-bold text-slate-800 focus:outline-none">
+                                <option value="SJIS" selected>Shift_JIS （誤解釈）</option>
+                                <option value="ISO-8859-1">ISO-8859-1 (欧米)</option>
+                                <option value="EUC-JP">EUC-JP (Linux)</option>
+                            </select>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-amber-100 text-[11px] text-slate-600 leading-relaxed">
+                            <p id="mech-rule-desc">
+                                UTF-8で作られた数字「E3 81 82」を、Shift_JISの辞書で引いてしまう！
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- STEP C: Mojibake Character Result -->
+                    <div class="bg-rose-50/60 border border-rose-200 rounded-2xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase">STEP 3</span>
+                            <span class="text-[11px] font-bold text-rose-800">化けた文字が表示される！</span>
+                        </div>
+                        <div class="text-center py-2 space-y-1">
+                            <div class="text-3xl font-black text-rose-600 font-mono" id="mech-result-char">ã</div>
+                            <div class="text-[11px] font-bold text-rose-700" id="mech-result-label">全く違う文字に変身</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-rose-100 text-[11px] text-slate-600">
+                            「あ」という言葉が、ルール違いにより別々のバイトとして解釈され、化けて表示されました。
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Encoding Comparison Card Table -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <h4 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <i data-lucide="layers" class="w-5 h-5 text-brand-500"></i>
+                    主要な文字コード（ルール）の仲間たち
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                        <div class="font-bold text-brand-600 text-sm">UTF-8</div>
+                        <div class="text-[10px] font-bold text-slate-400">今の世界の標準ルール</div>
+                        <p class="text-slate-600 text-[11px] leading-relaxed">
+                            スマホやWebサイトでほぼ100%使われている万能コード。世界中の全言語を扱えます。
+                        </p>
+                    </div>
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                        <div class="font-bold text-amber-600 text-sm">Shift_JIS</div>
+                        <div class="text-[10px] font-bold text-slate-400">昔のWindowsのルール</div>
+                        <p class="text-slate-600 text-[11px] leading-relaxed">
+                            日本独自で発達したルール。日本語を少ないデータ量で扱える反面、UTF-8と混ざると化けやすいです。
+                        </p>
+                    </div>
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                        <div class="font-bold text-purple-600 text-sm">ISO-2022-JP</div>
+                        <div class="text-[10px] font-bold text-slate-400">ガラケー・昔のメール</div>
+                        <p class="text-slate-600 text-[11px] leading-relaxed">
+                            「ここから日本語」「ここから英字」という合図（エスケープ）を使って文字を切り替える特殊ルール。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50">
+        <i data-lucide="check-circle" class="w-4 h-4 text-brand-green"></i>
+        <span id="toast-text">コピーしました</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        lucide.createIcons();
+
+        // Preset Configurations
+        const PRESETS = {
+            'utf8-sjis': { text: 'こんにちは！', src: 'UTF-8', dst: 'SJIS' },
+            'sjis-latin': { text: '文字化けテスト', src: 'SJIS', dst: 'ISO-8859-1' },
+            'jis-utf8': { text: 'メールの件名です', src: 'JIS', dst: 'UTF-8' },
+            'sjis-utf8': { text: '漢字が化けます', src: 'SJIS', dst: 'UTF-8' }
+        };
+
+        // Encoding conversion helper using Encoding-Japanese library
+        function stringToBytes(str, encoding) {
+            try {
+                if (encoding === 'ISO-8859-1') {
+                    const bytes = [];
+                    for (let i = 0; i < str.length; i++) {
+                        bytes.push(str.charCodeAt(i) & 0xFF);
+                    }
+                    return bytes;
+                }
+                const unicodeArray = Encoding.stringToCode(str);
+                return Encoding.convert(unicodeArray, { to: encoding, from: 'UNICODE' });
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function bytesToString(bytes, encoding) {
+            try {
+                if (encoding === 'ISO-8859-1') {
+                    let str = '';
+                    for (let i = 0; i < bytes.length; i++) {
+                        str += String.fromCharCode(bytes[i]);
+                    }
+                    return str;
+                }
+                const unicodeArray = Encoding.convert(bytes, { to: 'UNICODE', from: encoding });
+                return Encoding.codeToString(unicodeArray);
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function bytesToHex(bytes) {
+            return bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        }
+
+        /**
+         * STEP 1: Simple Simulation Update
+         */
+        function updateSimpleSimulation() {
+            const input = document.getElementById('simple-input').value;
+            const src = document.getElementById('simple-src-rule').value;
+            const dst = document.getElementById('simple-dst-rule').value;
+
+            document.getElementById('simple-char-count').innerText = `${input.length} 文字`;
+
+            if (!input) {
+                document.getElementById('simple-output').innerText = '（入力してください）';
+                return;
+            }
+
+            const bytes = stringToBytes(input, src);
+            const result = bytesToString(bytes, dst);
+
+            const outputEl = document.getElementById('simple-output');
+            outputEl.innerText = result;
+
+            const statusPill = document.getElementById('match-status-pill');
+            if (src === dst) {
+                statusPill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700";
+                statusPill.innerText = "✓ ルール一致（正常表示）";
+            } else {
+                statusPill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-600";
+                statusPill.innerText = "ルール不一致（文字化け中）";
+            }
+        }
+
+        function applySimplePreset(key) {
+            const p = PRESETS[key];
+            if (!p) return;
+            document.getElementById('simple-input').value = p.text;
+            document.getElementById('simple-src-rule').value = p.src;
+            document.getElementById('simple-dst-rule').value = p.dst;
+            updateSimpleSimulation();
+            showToast('プリセットを適用しました');
+        }
+
+        function swapSimpleRules() {
+            const src = document.getElementById('simple-src-rule');
+            const dst = document.getElementById('simple-dst-rule');
+            const tmp = src.value;
+            src.value = dst.value;
+            dst.value = tmp;
+            updateSimpleSimulation();
+        }
+
+        /**
+         * STEP 2: Mechanism View Update
+         */
+        function updateMechanismView() {
+            const charInput = document.getElementById('mech-single-char').value || 'あ';
+            const char = Array.from(charInput)[0] || 'あ';
+            document.getElementById('mech-single-char').value = char;
+
+            const dstRule = document.getElementById('mech-rule-select').value;
+
+            // Step 1: Character & Unicode
+            document.getElementById('mech-char-display').innerText = char;
+            const codePoint = 'U+' + char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+            document.getElementById('mech-unicode-display').innerText = `Unicode: ${codePoint}`;
+
+            // Step 1: UTF-8 Bytes
+            const utf8Bytes = stringToBytes(char, 'UTF-8');
+            const hex = bytesToHex(utf8Bytes);
+            document.getElementById('mech-bytes-hex').innerText = hex || '-';
+            document.getElementById('mech-bytes-count').innerText = `（${utf8Bytes.length}バイトのデータ）`;
+
+            // Step 2 & 3: Misinterpretation
+            const resultChar = bytesToString(utf8Bytes, dstRule);
+            document.getElementById('mech-result-char').innerText = resultChar;
+
+            const descEl = document.getElementById('mech-rule-desc');
+            descEl.innerText = `UTF-8で作られた数字列「${hex}」を、${dstRule} のルール・辞書で強引に解釈しようとしています。`;
+        }
+
+        /**
+         * Switch Mode Tabs
+         */
+        function switchTab(tab) {
+            const v1 = document.getElementById('view-step1');
+            const v2 = document.getElementById('view-step2');
+            const btn1 = document.getElementById('btn-tab-step1');
+            const btn2 = document.getElementById('btn-tab-step2');
+
+            if (tab === 'step1') {
+                v1.classList.remove('hidden');
+                v2.classList.add('hidden');
+
+                btn1.className = "px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 bg-white text-brand-600 shadow-sm";
+                btn2.className = "px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2";
+            } else {
+                v2.classList.remove('hidden');
+                v1.classList.add('hidden');
+
+                btn2.className = "px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 bg-white text-brand-600 shadow-sm";
+                btn1.className = "px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2";
+
+                updateMechanismView();
+            }
+        }
+
+        function copyOutputText() {
+            const text = document.getElementById('simple-output').innerText;
+            if (!text || text.includes('入力してください')) return;
+            copyTextToClipboard(text);
+            showToast('文字化け結果をコピーしました！');
+        }
+
+        function copyChallengeLink() {
+            const result = document.getElementById('simple-output').innerText;
+            const msg = `【文字化けクイズ】この文字は何と書いてあるでしょう？\n「${result}」`;
+            copyTextToClipboard(msg);
+            showToast('問題文テキストをコピーしました！');
+        }
+
+        function copyTextToClipboard(text) {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            updateSimpleSimulation();
+        };
+    </script>
+</body>
+</html>
